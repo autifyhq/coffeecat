@@ -1,8 +1,8 @@
 require("dotenv").config();
 
-module.exports = () => (
+module.exports = (token, signingSecret) => (
   new App({
-    token: process.env.SLACK_BOT_TOKEN,
-    signingSecret: process.env.SLACK_SIGNING_SECRET,
+    token: token || process.env.SLACK_BOT_TOKEN,
+    signingSecret: signingSecret || process.env.SLACK_SIGNING_SECRET,
   })
 )

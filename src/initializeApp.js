@@ -1,3 +1,5 @@
+require("dotenv").config();
+
 module.exports = () => (
   new App({
     token: process.env.SLACK_BOT_TOKEN,

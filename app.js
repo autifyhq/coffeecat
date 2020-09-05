@@ -1,38 +1,36 @@
 require("dotenv").config();
 const { App } = require("@slack/bolt");
 
+const allocateMember = require('./src/allocate')
+const shuffle = require('./src/shuffle')
+const getMembers = require('./src/getMembers')
+
 // Initializes your app with your bot token and signing secret
 const app = new App({
   token: process.env.SLACK_BOT_TOKEN,
   signingSecret: process.env.SLACK_SIGNING_SECRET,
 });
 
-app.message('hello', async ({ message, say }) => {
-  await say({
-    blocks: [
-      {
-        type: "section",
-        text: {
-          type: "mrkdwn",
-          text: `Hey there <@${message.user}>!`,
-        },
-        accessory: {
-          type: "button",
-          text: {
-            type: "plain_text",
-            text: "Click Me",
-          },
-          action_id: "button_click",
-        },
-      },
-    ],
-    text: `Hey there <@${message.user}>!`,
-  });
-});
+app.message("coffeechat", async ({ message, say, context }) => {
+  if (message.subtype === 'reminder_add') return
+  const found = message.text.match(/coffeechat (?<rooms>\d)/)
+  if (!found) {
+    console.log(`no room found on ${message.text}`)
+    return
+  }
+  const token = context.botToken;
+  const members = await getMembers(app, token, message.channel)
+  const shuffledMembers = shuffle(members)
+  const allocated = allocateMember(shuffledMembers, found.groups.rooms)
 
-app.action('button_click', async ({ body, ack, say }) => {
-  await ack();
-  await say(`<@${body.user.id} clicked the button!`);
+  const notifyText = allocated.reduce((text, current, currentIndex) => {
+    text += `Meeting-Room-${currentIndex + 1}` + "\n"
+    text += current.reduce((text, current) => {
+      return text + `- ${current.real_name}` + "\n"
+    }, '')
+    return text
+  }, '')
+  await say(notifyText)
 });
 
 (async () => {

@@ -1,4 +1,5 @@
 require("dotenv").config();
+const { App } = require("@slack/bolt");
 
 module.exports = (token, signingSecret) => (
   new App({

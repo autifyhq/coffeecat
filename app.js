@@ -4,6 +4,8 @@ const { App } = require("@slack/bolt");
 const allocateMember = require('./src/allocate')
 const shuffle = require('./src/shuffle')
 const getMembers = require('./src/getMembers')
+const keyword = process.env.KEYWORD || 'coffeechat'
+const roomNamePrefix = process.env.ROOM_NAME_PREFIX || 'Coffee'
 
 // Initializes your app with your bot token and signing secret
 const app = new App({
@@ -11,7 +13,7 @@ const app = new App({
   signingSecret: process.env.SLACK_SIGNING_SECRET,
 });
 
-app.message("coffeechat", async ({ message, say, context }) => {
+app.message(keyword, async ({ message, say, context }) => {
   if (message.subtype === 'reminder_add') return
   const found = message.text.match(/coffeechat (?<rooms>\d)/)
   if (!found) {
@@ -24,7 +26,7 @@ app.message("coffeechat", async ({ message, say, context }) => {
   const allocated = allocateMember(shuffledMembers, found.groups.rooms)
 
   const notifyText = allocated.reduce((text, current, currentIndex) => {
-    text += `Meeting-Room-${currentIndex + 1}` + "\n"
+    text += `${roomNamePrefix}-${currentIndex + 1}` + "\n"
     text += current.reduce((text, current) => {
       return text + `- ${current.real_name}` + "\n"
     }, '')
